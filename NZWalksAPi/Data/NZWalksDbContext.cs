@@ -45,7 +45,6 @@ namespace NZWalksAPi.Data
 
 
             //Seed data for region
-          
             
                 var regions = new List<Region>
             {
