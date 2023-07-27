@@ -8,6 +8,7 @@ using NZWalksAPi.Data;
 using NZWalksAPi.Models.Domain;
 using NZWalksAPi.Models.DTO;
 using NZWalksAPi.Repositories;
+using System.Text.Json;
 
 namespace NZWalksAPi.Controllers
 {
@@ -18,20 +19,40 @@ namespace NZWalksAPi.Controllers
     {
         private readonly NZWalksDbContext dbContext;
         private readonly IMapper mapper;
+        private readonly ILogger<RegionsController> logger;
         public IRegionRepository regionRepository;
 
-        public RegionsController(NZWalksDbContext dbContext,IRegionRepository regionRepository,IMapper mapper)
+        public RegionsController(NZWalksDbContext dbContext,IRegionRepository regionRepository,IMapper mapper,ILogger<RegionsController> logger)
         {
             this.dbContext = dbContext;
             this.regionRepository = regionRepository;
             this.mapper = mapper;
+            this.logger = logger;
         }
         [HttpGet]
-        [Authorize(Roles ="Reader,Writer")]
+       // [Authorize(Roles ="Reader,Writer")]
         public async Task<IActionResult> GetAll()
         {
+            try
+            {
+                throw new Exception("This is custom exception");
+                var regionsDomain = await regionRepository.GetAllAsync();
+                logger.LogInformation("GetAll method region was invoked");
+                logger.LogInformation($"Finished GetAll region request with data: {JsonSerializer.Serialize(regionsDomain)}");
+                //Maps Domain Models to DTO's using automapper
+                var regionsDto = mapper.Map<List<RegionDto>>(regionsDomain);
+
+                //Return DTOs
+                return Ok(regionsDto);
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,ex.Message);
+                throw;
+            }
             //Get data from database -Domain models
-            var regionsDomain =await regionRepository.GetAllAsync();
+
 
             //Maps Domain Models to DTO's
             //var regionDto = new List<RegionDto>();
@@ -47,11 +68,7 @@ namespace NZWalksAPi.Controllers
             //    });
             //}
 
-            //Maps Domain Models to DTO's using automapper
-           var regionsDto= mapper.Map<List<RegionDto>>(regionsDomain);
             
-            //Return DTOs
-            return Ok(regionsDto);
         }
 
         //Get Single Region (get region by id)
